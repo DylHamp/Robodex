@@ -73,11 +73,10 @@ class Robot():
         self.logo = logo
         self.right_img = Image.open('left_frame_img.jpg')
         self.right_img = self.right_img.resize((850, 1000), Image.ANTIALIAS)
+        self.compare_img = Image.open('compareBackImage.jpg')
+        self.compare_img = self.compare_img.resize((1105, 400), Image.ANTIALIAS)
         self.teams_found = []
-        
-
-        
-
+            
     def makeSize(self, image, logo=False):
         '''Remakes Image.jpg or any into an image that is 250x250 pixels
         Do not take Portait photos with phone. Causes image to go sideways'''
@@ -269,15 +268,12 @@ class Robodex(tk.Frame):
         self.graph = Histogram(self.rightFrame.interior)
         self.graph.pack(anchor=tk.W)
             
-        
     def compare_change(self):
         '''Makes the compare button's text index through [=,<,>].'''
         if self.compare_index > 2:
             self.compare_index = 0
         self.numCompare['text'] = self.compare[self.compare_index]
         self.compare_index += 1
-
-
 
     def key_change(self):
         '''Makes the key button's text index through all the keys in our dictionary.'''
@@ -309,6 +305,7 @@ class Robodex(tk.Frame):
     def search(self, key, wanted):
         '''Checks through the keys in our dictionary to see if that key holds the wanted variable'''
         self.search_button['text'] = "Searching..."
+        self.profile = []
         self.key = key
         found = False
         result = []
@@ -339,6 +336,7 @@ class Robodex(tk.Frame):
         if found:
             self.search_button['text'] = "Found!"
             self.profile = result #Asign profile list to result
+            robot.teams_found = []
             for index in self.profile:
                 robot.teams_found.append(inf[index]['Team'])
             self.change_text(self.profile[0]) #Sets the text on screen to first item in profile list
@@ -347,15 +345,11 @@ class Robodex(tk.Frame):
             
     def change_text(self, index):
         '''Rewrites the labels & textboxes to hold information about searched team'''
-
-        
-
         #Clear labels and data
         for mech in robot.mechs:
             self.mechs_list[robot.mechs.index(mech)].pack_forget()
             self.text_list[robot.mechs.index(mech)].pack_forget()
         self.graph.pack_forget()
-        self.teams_found_Label['text'] = ""
 
         #Change robot class values
         robot.name = inf[index]['Name']
@@ -408,8 +402,7 @@ class CompareTwo(tk.Frame):
         self.search_entry1.grid(sticky=tk.W, row=0, column=2, padx=(0, 10))
         
         self.search_button1 = tk.Button(self.topFrame, text="Search",
-                                       command=lambda: self.search(self.key_button['text'],
-                                                                   self.search_entry.get()))
+                                       command=lambda: self.search2(self.search_entry1.get(), "robot"))
         self.search_button1.grid(sticky=tk.W, row=0, column=3, padx=(0, 20))
         
         titleLbl = tk.Label(self.topFrame, text="Two Robots Are Compared Here",
@@ -427,13 +420,13 @@ class CompareTwo(tk.Frame):
         self.search_entry2.grid(sticky=tk.W, row=0, column=6)
 
         self.search_button2 = tk.Button(self.topFrame, text="Search",
-                                       command=lambda: self.search(self.key_button['text'],
-                                                                   self.search_entry.get()))
+                                        command=lambda: self.search2(self.search_entry2.get()))
+                                        
         self.search_button2.grid(sticky=tk.W, row=0, column=7, padx=(10,0))
         
-        self.change_button_r = tk.Button(self, text="change",
+        self.change_button_r = tk.Button(self.topFrame, text="change",
                                        command=lambda: self.controller.show_frame("Robodex"))
-        self.change_button_r.grid()
+        self.change_button_r.grid(row=0, column=8, sticky=tk.E)
 
         self.team_found_Label = tk.Label(self.topFrame, text="Teams found:",
                                           font=("courier", "13", "bold"),
@@ -445,27 +438,36 @@ class CompareTwo(tk.Frame):
         self.teams_found_Label.grid(sticky=tk.W, row=1, column=1, columnspan=10)
         
         #Creating bottom frame
-        self.botFrame = tk.Frame(self, width=800)
+        self.botFrame = tk.Frame(self, width=800, bg='black')
         self.botFrame.grid()
+        self.compare_img = ImageTk.PhotoImage(robot.compare_img)
+        self.image_label = tk.Label(self, image = self.compare_img, width=1105, height=200)
+        self.image_label.grid()
         
         #Create left frame
-        self.leftCompareFrame = VerticalScrolledFrame(self.botFrame, width=500)
+        self.leftCompareFrame = VerticalScrolledFrame(self.botFrame)
         self.leftCompareFrame.pack(expand=True, fill=tk.BOTH, anchor=tk.E, side='left')
         self.bg_left = ImageTk.PhotoImage(robot.right_img)
         self.leftBg = tk.Label(self.leftCompareFrame.interior, image=self.bg_left)
         self.leftBg.place(x=0, y=0, relwidth=1, relheight=1)
 
-        self.leftCompare = tk.Frame(self.leftCompareFrame.interior)
-        self.leftCompare.grid(row=0, column=0)
-        self.leftRobotName = tk.Label(self.leftCompare, text=("Left Robot"), font=("courier", "20"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.leftRobotName.grid()
+        self.leftCompare = self.leftCompareFrame.interior
+        self.leftRobotName = tk.Label(self.leftCompare, text=("Left Robot"), width=33, font=("courier", "20"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
+        self.leftRobotName.grid(row=0)
         self.leftRobotDrive = tk.Label(self.leftCompare, text=("Left Drive"), font=("courier", "15"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.leftRobotDrive.grid(sticky=tk.E+tk.W)
+        self.leftRobotDrive.grid(row=1)
         self.leftRobotChassis = tk.Label(self.leftCompare, text=("Left Chassis"), font=("courier", "15"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.leftRobotChassis.grid(sticky=tk.E+tk.W)
+        self.leftRobotChassis.grid(row=2)
         self.leftRobotMechan = tk.Label(self.leftCompare, text=("Left Mechanisms"), font=("courier", "15"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.leftRobotMechan.grid(sticky=tk.E+tk.W)
+        self.leftRobotMechan.grid(row=3)
 
+        self.leftGraphFrame = tk.Frame(self.leftCompare)
+        self.leftTeleGearGraph = Histogram(self.leftGraphFrame)
+        self.leftTeleGearGraph.pack(anchor=tk.W)
+        self.leftGraphFrame.grid()
+        
+        
+        
         #Create right frame
         self.rightCompareFrame = VerticalScrolledFrame(self.botFrame, width=500)
         self.rightCompareFrame.pack(expand=True, fill=tk.BOTH, anchor=tk.E, side='left')
@@ -473,16 +475,25 @@ class CompareTwo(tk.Frame):
         self.rightBg = tk.Label(self.rightCompareFrame.interior, image=self.bg_left)
         self.rightBg.place(x=0, y=0, relwidth=1, relheight=1)
 
-        self.rightCompare = tk.Frame(self.rightCompareFrame.interior)
-        self.rightCompare.grid()
-        self.rightRobotName = tk.Label(self.rightCompare, text=("Right Robot"), font=("courier", "20"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.rightRobotName.grid(sticky=tk.E+tk.W)
+        self.rightCompare = self.rightCompareFrame.interior
+        self.rightRobotName = tk.Label(self.rightCompare, text=("Right Robot"), width=33, font=("courier", "20"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
+        self.rightRobotName.grid(row=0)
         self.rightRobotDrive = tk.Label(self.rightCompare, text=("Right Drive"), font=("courier", "15"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.rightRobotDrive.grid(sticky=tk.E+tk.W)
+        self.rightRobotDrive.grid(row=1)
         self.rightRobotChassis = tk.Label(self.rightCompare, text=("Right Chassis"), font=("courier", "15"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.rightRobotChassis.grid(sticky=tk.E+tk.W)
+        self.rightRobotChassis.grid(row=2)
         self.rightRobotMechan = tk.Label(self.rightCompare, text=("Right Mechanisms"), font=("courier", "15"), bg='#7D4735', fg='#EEE3B9',relief=tk.RAISED)
-        self.rightRobotMechan.grid(sticky=tk.E+tk.W)
+        self.rightRobotMechan.grid(row=3)
+
+        self.rightGraphFrame = tk.Frame(self.rightCompare)
+        self.rightTeleGearGraph = Histogram(self.rightGraphFrame)
+        self.rightGraphFrame.grid()
+        self.rightTeleGearGraph.pack(anchor=tk.W)
+
+        self.left_flag = False
+        self.right_flag = False
+
+        self.create_mechs(0, 'robot')
 
     def initialise_text(self):
         '''Rewrites the labels & textboxes to hold information about searched team'''
@@ -493,8 +504,104 @@ class CompareTwo(tk.Frame):
         self.leftRobotName['text'] = robot.name
         self.leftRobotDrive['text'] = robot.drive
         self.leftRobotChassis['text'] = robot.chassis
-        
 
+    def search2(self, wanted, side="robot2"):
+        '''Checks through the keys in our dictionary to see if that key holds the wanted variable'''
+        print(wanted)
+        found = False
+        result = ""
+        for i in range(len(inf)):
+            print("try")
+            if wanted == inf[i]['Team']:
+                print("Found")
+                found = True
+                result = i
+        if found:
+            print(result, side)
+            self.change_text(result, side)
+            
+    def change_text(self, index, side):
+        #start
+        if side == 'robot':
+            #left
+            for mech in robot.mechs:
+                self.left_mechs_list[robot.mechs.index(mech)].grid_forget()
+                self.left_text_list[robot.mechs.index(mech)].grid_forget()
+        
+            robot.name = inf[index]['Name']
+            robot.drive = inf[index]['Drive']
+            robot.chassis = inf[index]['Chassis']
+            robot.mechs = inf[index]['Mechs']
+            robot.mechD = inf[index]['MechD']
+            self.leftRobotName['text'] = robot.name
+            self.leftRobotDrive['text'] = robot.drive
+            self.leftRobotChassis['text'] = robot.chassis
+            self.create_mechs(index, 'robot')
+
+        else:
+            #right
+            robot2.name = inf[index]['Name']
+            robot2.drive = inf[index]['Drive']
+            robot2.chassis = inf[index]['Chassis']
+            self.rightRobotName['text'] = robot2.name
+            self.rightRobotDrive['text'] = robot2.drive
+            self.rightRobotChassis['text'] = robot2.chassis
+            self.create_mechs(index, 'robot2')
+
+    def create_mechs(self, index, side):
+        if side == 'robot':
+            self.left_mechs_list = []
+            self.left_text_list = []
+            for mech in robot.mechs:
+                self.left_mechs_list.append(robot.mechs[robot.mechs.index(mech)])
+                self.left_text_list.append(robot.mechs[robot.mechs.index(mech)])
+
+        
+            step = 4
+            for mech in robot.mechs:
+                self.left_mechs_list[self.left_mechs_list.index(mech)] = tk.Label(self.leftCompare, text=mech,
+                                           bg="#7D4735", fg="#EEE3B9", font=("courier", "15"),
+                                                                        relief=tk.RAISED)
+                self.left_text_list[robot.mechs.index(mech)] = tk.Text(self.leftCompare, height=2, width=50,
+                                         wrap=tk.WORD, font=("courier", "13"),
+                                         bg="#7D4735", fg="#EEE3B9")
+                self.left_mechs_list[robot.mechs.index(mech)].grid(row=4+step, pady=(10, 0),ipadx=5, sticky=tk.W)
+                self.left_text_list[robot.mechs.index(mech)].grid(row=5+step, padx=(45, 10), pady=(5, 10), sticky=tk.W)
+                self.left_text_list[robot.mechs.index(mech)].insert(tk.END, robot.mechD[robot.mechs.index(mech)])
+                self.left_text_list[robot.mechs.index(mech)].config(state=tk.DISABLED)
+                step += 2
+
+            self.leftTeleGearGraph.pack_forget()
+            self.leftTeleGearGraph = Histogram(self.leftGraphFrame, title="Tele Gears")
+            #self.leftTeleGearGraph.pack(anchor=tk.W)
+            self.leftGraphFrame.grid(row=6+step)
+            print(step)
+
+        else:
+            self.mechs_list = []
+            self.text_list = []
+            for mech in robot.mechs:
+                self.mechs_list.append(robot.mechs[robot.mechs.index(mech)])
+                self.text_list.append(robot.mechs[robot.mechs.index(mech)])
+                
+            self.rightGraphFrame.grid_forget()
+            
+            print(self.mechs_list)
+            step = 0
+            for mech in robot.mechs:
+                self.mechs_list[self.mechs_list.index(mech)] = tk.Label(self.rightCompare, text=mech,
+                                                                        bg="#7D4735", fg="#EEE3B9", font=("courier", "15"),
+                                                                        relief=tk.RAISED)
+                self.text_list[robot.mechs.index(mech)] = tk.Text(self.rightCompare, height=2, width=50,
+                                                                  wrap=tk.WORD, font=("courier", "13"),
+                                                                  bg="#7D4735", fg="#EEE3B9")
+                self.mechs_list[robot.mechs.index(mech)].grid(row=4+step, pady=(10, 0),ipadx=5, sticky=tk.W)
+                self.text_list[robot.mechs.index(mech)].grid(row=5+step, padx=(45, 10), pady=(5, 10), sticky=tk.W)
+                self.text_list[robot.mechs.index(mech)].insert(tk.END, robot.mechD[robot.mechs.index(mech)])
+                self.text_list[robot.mechs.index(mech)].config(state=tk.DISABLED)
+                step += 2
+            self.rightGraph = Histogram(self.rightGraphFrame)
+            self.rightGraph.pack(anchor=tk.W)
 
 robot = Robot()
 robot2 = Robot()
